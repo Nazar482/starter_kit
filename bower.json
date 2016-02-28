@@ -1,0 +1,19 @@
+{
+  "name": "Starter Kit",
+  "version": "1.0.0",
+  "authors": [
+    "N.Atamaniuk"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "normalize.css": "*",
+    "jquery": "2.*"
+  }
+}
