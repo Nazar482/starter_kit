@@ -1,0 +1,22 @@
+//normalizer
+@import "../../bower_components/normalize.css/normalize";
+
+//foundation
+@import "plugins/foundation/foundation";
+@include foundation-everything($flex: true);
+
+//fonts
+@import "../../bower_components/font-awesome/scss/font-awesome.scss";
+
+//base
+@import "base/_variables";
+@import "base/_base.scss";
+
+//partials
+@import "partials/_header.scss";
+@import "partials/_footer.scss";
+
+//components
+
+
+// pages

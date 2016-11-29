@@ -6,35 +6,36 @@ var gulp = require('gulp'),
     uglify = require('gulp-uglify'),
     sass = require('gulp-sass'),
     rigger = require('gulp-rigger'),
-    jade = require('gulp-jade'),
     cssmin = require('gulp-minify-css'),
     imagemin = require('gulp-imagemin'),
     pngquant = require('imagemin-pngquant'),
     rimraf = require('rimraf'),
+    plumber = require('gulp-plumber'),
     browserSync = require("browser-sync"),
+    pug = require('gulp-pug'),
     reload = browserSync.reload;
 
 
 // Paths
 var path = {
     build: { //Тут мы укажем куда складывать готовые после сборки файлы
-        html: 'build/',
+        pug: 'build/',
         js: 'build/js/',
         css: 'build/css/',
         img: 'build/img/',
         fonts: 'build/fonts/'
     },
     src: { //Пути откуда брать исходники
-        html: 'src/templates/*.jade', //Синтаксис src/*.html говорит gulp что мы хотим взять все файлы с расширением .html
-        js: 'src/js/main.js',//В стилях и скриптах нам понадобятся только main файлы
-        sass: 'src/sass/main.sass',
+        pug: 'src/templates/*.pug', //Синтаксис src/*.pug говорит gulp что мы хотим взять все файлы с расширением .pug
+        js: 'src/js/main.js', //В стилях и скриптах нам понадобятся только main файлы
+        sass: 'src/scss/main.scss',
         img: 'src/img/**/*.*', //Синтаксис img/**/*.* означает - взять все файлы всех расширений из папки и из вложенных каталогов
         fonts: 'src/fonts/**/*.*'
     },
     watch: { //Тут мы укажем, за изменением каких файлов мы хотим наблюдать
-        html: 'src/**/*.jade',
+        pug: 'src/**/*.pug',
         js: 'src/js/**/*.js',
-        sass: 'src/sass/**/*.sass',
+        sass: 'src/scss/**/*.scss',
         img: 'src/img/**/*.*',
         fonts: 'src/fonts/**/*.*'
     },
@@ -44,28 +45,32 @@ var path = {
 // Dev server
 var config = {
     server: {
-        baseDir: "./build"
+        baseDir: "./build",
+        index: "index.html"
     },
     tunnel: true,
     host: 'localhost',
     port: 9000,
-    logPrefix: "Frontend_Devil"
+    logPrefix: "dev_server"
+
 };
 
 //Jade build
-gulp.task('jade:build', function() {
-    gulp.src(path.src.html)
-        .pipe(jade({
+gulp.task('pug:build', function() {
+    gulp.src(path.src.pug)
+        .pipe(pug({
             pretty: true
         }))
-        .on('error', console.log) // Если есть ошибки, выводим и продолжаем
-        .pipe(gulp.dest(path.build.html)) // Записываем собранные файлы
+        .pipe(plumber())
+        .pipe(rigger()) //Прогоним через rigger
+        .pipe(gulp.dest(path.build.pug)) // Записываем собранные файлы
         .pipe(reload({stream: true})); // даем команду на перезагрузку страницы
 });
 
 //Javascript build
 gulp.task('js:build', function () {
     gulp.src(path.src.js) //Найдем наш main файл
+        .pipe(plumber())
         .pipe(rigger()) //Прогоним через rigger
         .pipe(uglify()) //Сожмем наш js
         .pipe(gulp.dest(path.build.js)) //Выплюнем готовый файл в build
@@ -75,9 +80,10 @@ gulp.task('js:build', function () {
 //Sass build
 gulp.task('sass:build', function () {
     gulp.src(path.src.sass) //Выберем наш main.scss
+        .pipe(plumber())
         .pipe(sass()) //Скомпилируем
         .pipe(prefixer()) //Добавим вендорные префиксы
-        //.pipe(cssmin()) //Сожмем
+        .pipe(cssmin()) //Сожмем
         .pipe(gulp.dest(path.build.css)) //И в build
         .pipe(reload({stream: true}));
 });
@@ -85,6 +91,7 @@ gulp.task('sass:build', function () {
 //Images build
 gulp.task('image:build', function () {
     gulp.src(path.src.img) //Выберем наши картинки
+        .pipe(plumber())
         .pipe(imagemin({ //Сожмем их
             progressive: true,
             svgoPlugins: [{removeViewBox: false}],
@@ -98,12 +105,13 @@ gulp.task('image:build', function () {
 //Fonts build
 gulp.task('fonts:build', function() {
     gulp.src(path.src.fonts)
+        .pipe(plumber())
         .pipe(gulp.dest(path.build.fonts))
 });
 
 //Build for all
 gulp.task('build', [
-    'jade:build',
+    'pug:build',
     'js:build',
     'sass:build',
     'fonts:build',
@@ -112,8 +120,8 @@ gulp.task('build', [
 
 //Gulp watcher
 gulp.task('watch', function(){
-    watch([path.watch.html], function(event, cb) {
-        gulp.start('jade:build');
+    watch([path.watch.pug], function(event, cb) {
+        gulp.start('pug:build');
     });
     watch([path.watch.sass], function(event, cb) {
         gulp.start('sass:build');
